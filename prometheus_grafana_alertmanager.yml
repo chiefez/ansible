@@ -1,0 +1,194 @@
+---
+    - name: Setup monitoring services
+      hosts: PROD_SERVER
+      become: yes
+      tasks:
+        - block: #====Installing for Debin====#
+             - name: Update pkg
+               ansible.builtin.apt:
+                   update_cache: yes
+
+             - name: Install grafana
+               ansible.builtin.apt:
+                   deb: https://oddler.ru/images/com/soblog/items/2096/grafana-enterprise_10.2.0_amd64.deb
+                   state: present
+
+             - name: Enable and start grafana
+               ansible.builtin.systemd:
+                   name: grafana-server
+                   enabled: yes
+                   state: started
+
+             - name: Install Prometheus
+               ansible.builtin.apt:
+                   name: prometheus
+                   state: present
+
+             - name: Create directory for alertmanager
+               ansible.builtin.file:
+                   path: /home/share/alertmanager
+                   state: directory
+
+             - name: Download Alertmanager
+               ansible.builtin.get_url:
+                   url: https://github.com/prometheus/alertmanager/releases/download/v0.25.0/alertmanager-0.25.0.linux-amd64.tar.gz
+                   dest: /home/share/alertmanager/alertmanager-0.25.0.linux-amd64.tar.gz
+
+             - name: Unpacking alertmanager
+               ansible.builtin.unarchive:
+                   src: /home/share/alertmanager/alertmanager-0.25.0.linux-amd64.tar.gz
+                   dest: /home/share/alertmanager/
+                   remote_src: yes
+
+             - name: Create user for alertmanager
+               ansible.builtin.user:
+                   name: alertmanager
+                   create_home: no
+                   shell: /bin/false
+
+             - name: Create directory for alertmanager
+               ansible.builtin.file:
+                   path:
+                      - /etc/alertmanager/
+                      - /var/lib/prometheus/alertmanager/
+                   state: directory
+                   recurse: yes
+                   owner: alertmanager
+
+             - name: Copy file alertmanager
+               ansible.builtin.copy:
+                   src: /home/share/alertmanager/alertmanager-0.25.0.linux-amd64/alertmanager
+                   owner: alertmanager
+                   dest: /usr/local/bin/alertmanager
+                   remote_src: yes
+
+             - name: Copy file amtool
+               ansible.builtin.copy:
+                   src: /home/share/alertmanager/alertmanager-0.25.0.linux-amd64/amtool
+                   owner: alertmanager
+                   dest: /usr/local/bin/amtool
+                   remote_src: yes
+
+             - name: Copy file alertmanager.yml
+               ansible.builtin.copy:
+                   src: /home/share/alertmanager/alertmanager-0.25.0.linux-amd64/alertmanager.yml
+                   dest: /etc/alertmanager/
+                   remote_src: yes
+
+             - name: Create daemon alertmanager
+               ansible.builtin.copy:
+                   dest: /etc/systemd/system/alertmanager.service
+                   content: |
+                      [Unit]
+                      Description=Alertmanager Service
+                      After=network.target
+                      [Service]
+                      EnvironmentFile=-/etc/default/alertmanager
+                      User=alertmanager
+                      Group=alertmanager
+                      Type=simple
+                      ExecStart=/usr/local/bin/alertmanager \
+                      --config.file=/etc/alertmanager/alertmanager.yml \
+                      --storage.path=/var/lib/prometheus/alertmanager \
+                      --cluster.advertise-address="127.0.0.1:9093"\
+                      $ALERTMANAGER_OPTS
+                      ExecReload=/bin/kill -HUP $MAINPID
+                      Restart=on-failure
+                      [  Install]
+                      WantedBy=multi-user.target
+
+             - name: Enable alertmanager deamon
+               ansible.builtin.systemd:
+                   name: alertmanager
+                   enabled: yes
+                   state: started
+
+             - name: Create directory for exporter
+               ansible.builtin.file:
+                   path: /home/share/exporter/
+                   state: directory
+
+             - name: Download Node exporter
+               ansible.builtin.get_url:
+                   url: https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz
+                   dest: /home/share/exporter/node_exporter-1.8.2.linux-amd64.tar.gz
+
+             - name: Unarchive node
+               ansible.builtin.unarchive:
+                   src: /home/share/exporter/node_exporter-1.8.2.linux-amd64.tar.gz
+                   dest: /home/share/exporter/
+                   remote_src: yes
+
+             - name: Create user for node exporter
+               ansible.builtin.user:
+                   name: nodeuser
+                   shell: /bin/false
+                   create_home: no
+
+             - name: Copy file
+               ansible.builtin.copy:
+                   owner: nodeuser
+                   src: /home/share/exporter/node_exporter-1.8.2.linux-amd64/node_exporter
+                   dest: /usr/lib/bin/
+                   remote_src: yes
+
+             - name: Create daemon for node exporter
+               ansible.builtin.copy:
+                  dest: /etc/systemd/system/node_exporter.service
+                  content: |
+                     [Unit]
+                     Description=Node Exporter Service
+                     After=network.target
+                     [Service]
+                     User=nodeusr
+                     Group=nodeusr
+                     Type=simple
+                     ExecStart=/usr/local/bin/node_exporter
+                     ExecReload=/bin/kill -HUP $MAINPID
+                     Restart=on-failure
+                     [Install]
+                     WantedBy=multi-user.target
+
+             - name: Enable and start node_exporter
+               ansible.builtin.systemd:
+                  name: node_exporter
+                  enabled: yes
+                  state: started
+
+             - name: Delete package exporter
+               ansible.builtin.file:
+                  state: absent
+                  path: /home/share/exporter/
+
+             - name: Delete package alertmanager
+               ansible.builtin.file:
+                  state: absent
+                  path: /home/share/alertmanager/
+
+          when: ansible_os_family == "Debian"
+
+        - block: #====Firewall====#
+             - name: Enable Ufw
+               community.general.ufw:
+                  state: enabled
+
+             - name: Allow exporter
+               community.general.ufw:
+                  rule: allow
+                  port: '9100'
+
+             - name: Allow grafana
+               community.general.ufw:
+                  rule: allow
+                  port: '3000'
+
+             - name: Allow prometheus
+               community.general.ufw:
+                  rule: allow
+                  port: '9090'
+
+             - name: Allow alertmanager
+               community.general.ufw:
+                  rule: allow
+                  port: '9093'
+
