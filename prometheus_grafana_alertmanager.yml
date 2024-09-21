@@ -1,6 +1,6 @@
 ---
     - name: Setup monitoring services
-      hosts: PROD_SERVER
+      hosts: SERVER
       become: yes
       tasks:
         - block: #====Installing for Debin====#
