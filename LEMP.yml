@@ -1,0 +1,83 @@
+---
+   - name: Setup lemp
+     hosts: PROD_SERVER
+     become: yes
+     tasks:
+
+        #-----Обновление пакетов-----#
+        - name: update package
+          ansible.builtin.apt:
+             update_cache: yes
+
+        #-----установка nginx-----#
+        - name: install nginx
+          ansible.builtin.apt:
+             name: nginx
+             state: latest
+
+        - name: enable and start nginx
+          ansible.builtin.systemd:
+             name: nginx
+             enabled: yes
+             state: started
+
+        #-----установка MySQL-----#
+        - name: install mysql
+          ansible.builtin.apt:
+             name: mysql-server
+             state: latest
+
+        #-----установка PHP-----#
+        - name: install php-fpm
+          ansible.builtin.apt:
+             name: php8.3-fpm
+             state: present
+
+        - name: install php-mysql
+          ansible.builtin.apt:
+             name: php-mysql
+             state: latest
+        #-----настройка nginx-----#
+        - name: user for nginx
+          ansible.builtin.user:
+             name: nginx
+             create_home: no
+             shell: /bin/false
+
+        - name: directory for domain.ru
+          ansible.builtin.file:
+             path: /var/www/domain.test/
+             state: directory
+             owner: nginx
+             recurse: yes
+
+        - name: configure nginx
+          ansible.builtin.copy:
+             dest: /etc/nginx/sites-available/domain.test
+             content: |
+                server {
+                    listen 80;
+                    root /var/www/domain.test;
+                    index index.html index.htm index.php;
+                    server_name domain.test www.domain.test;
+                    location / {
+                        try_files $uri $uri/ =404;
+                    }
+                    location ~ \.php$ {
+                        include snippets/fastcgi-php.conf;
+                        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+                    }
+                    location ~ /\.ht {
+                        deny all;
+                    }
+                }
+
+        - name: Configuration activate
+          ansible.builtin.file:
+             src: /etc/nginx/sites-available/domain.test
+             dest: /etc/nginx/sites-enabled/domain.test
+             state: link
+        - name: Reload nginx
+          ansible.builtin.systemd:
+             name: nginx
+             state: reloaded
