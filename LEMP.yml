@@ -1,6 +1,6 @@
 ---
    - name: Setup lemp
-     hosts: PROD_SERVER
+     hosts: SERVER
      become: yes
      tasks:
 
