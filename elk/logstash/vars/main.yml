@@ -1,3 +1,0 @@
----
-# vars file for logstash
-  logstashDir: "/etc/logstash/conf.d/"
