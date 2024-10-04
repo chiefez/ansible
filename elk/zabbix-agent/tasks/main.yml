@@ -1,0 +1,17 @@
+---  
+  - name: add repo for zabbix
+    ansible.builtin.apt:
+      deb: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb
+      state: present
+
+  - name: install zabbix-agent
+    ansible.builtin.apt:
+      update_cache: yes
+      name: zabbix-agent
+      state: present
+
+  - name: enable and restart zabbix-agent
+    ansible.builtin.systemd:
+      name: zabbix-agent
+      enabled: yes
+      state: restarted
