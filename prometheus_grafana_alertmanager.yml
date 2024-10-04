@@ -3,7 +3,7 @@
       hosts: SERVER
       become: yes
       tasks:
-        - block: #====Installing for Debin====#
+        - block: 
              - name: Update pkg
                ansible.builtin.apt:
                    update_cache: yes
