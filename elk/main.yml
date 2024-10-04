@@ -1,0 +1,10 @@
+---
+  - name: main components
+    hosts: all 
+    become: yes
+    roles:
+      - role: main
+      - role: elasticsearch
+      - role: logstash
+      - role: kibana
+      - role: zabbix-agent

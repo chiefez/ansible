@@ -1,0 +1,17 @@
+---
+  - name: Install kibana
+    ansible.builtin.apt:
+      name: kibana
+      state: present
+          
+  - name: edit conf file
+    ansible.builtin.lineinfile:
+      path: /etc/kibana/kibana.yml
+      regexp: "^server.host"
+      line: "server.host: {{ ansible_all_ipv4_addresses | first}}"
+
+  - name: enable and restart
+    ansible.builtin.systemd:
+      name: kibana
+      enabled: yes
+      state: restarted 

@@ -1,0 +1,58 @@
+---    
+  - name: install logstash
+    ansible.builtin.apt:
+      name: logstash
+      state: present
+
+  - name: configure input.conf
+    ansible.builtin.blockinfile:
+      path: "{{ logstashDir }}/input.conf"
+      create: yes 
+      block: |
+        input {
+          beats {
+            port => 5044
+             }
+          }
+
+  - name: configure filter.conf
+    ansible.builtin.blockinfile:
+      path: "{{ logstashDir }}/filter.conf"
+      create: yes
+      block: |
+        filter {
+          if [type] == "syslog" {
+            grok {
+              match => { "message" => "%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}" }
+              add_field1 => [ "received_at", "%{@timestamp}" ]
+              add_field => [ "received_from", "%{host}" ]
+             }
+              date {
+                match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+              }
+            }
+          }
+
+  - name: configure output.conf
+    ansible.builtin.blockinfile:
+      path: "{{ logstashDir }}/output.conf"
+      create: yes
+      block: |
+        output {
+          elasticsearch {
+          hosts => ["https://localhost:9200"]
+          ssl => true
+          ssl_certificate_verification => false
+          manage_template => false
+          index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+          user => elastic
+          password => "1234"
+          }
+        } 
+
+  - name: enable and restart logstash
+    ansible.builtin.systemd:
+      name: logstash
+      enabled: yes
+      state: restarted 
+
