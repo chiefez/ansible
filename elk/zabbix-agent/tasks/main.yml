@@ -1,7 +1,7 @@
 ---  
   - name: add repo for zabbix
     ansible.builtin.apt:
-      deb: https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb
+      deb: "https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_{{ version }}"
       state: present
 
   - name: install zabbix-agent
