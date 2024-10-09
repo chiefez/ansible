@@ -1,4 +1,0 @@
- ---
-   # defaults file for zabbix-agent
-    vars:
-        version: 7.0-2+ubuntu24.04_all.deb
