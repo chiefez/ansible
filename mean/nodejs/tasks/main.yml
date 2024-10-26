@@ -1,0 +1,23 @@
+---
+  - name: install nodejs
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - "nodejs"
+      - "npm"
+
+  - name: create directory
+    ansible.builtin.file:
+      path: "{{ meanDir }}"
+      state: directory
+
+  - name: intasll packages
+    community.general.npm:
+      global: true
+      name: "{{ item }}" 
+      state: present
+    with_items:
+      - "@angular/cli"
+      - "express"
+

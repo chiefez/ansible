@@ -1,0 +1,30 @@
+---
+  - name: add gpg
+    ansible.builtin.apt_key:
+      url: "{{ item }}" 
+    with_items:
+      - "https://www.mongodb.org/static/pgp/server-{{mongodb_version}}.asc"
+      - "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
+
+  - name: add repo
+    ansible.builtin.apt_repository:
+      repo: "{{ item }}"  
+    with_items:
+      - "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/{{mongodb_version}} multiverse"
+      - "deb https://deb.nodesource.com/node_14.x focal main"
+
+  - name: install libssl
+    ansible.builtin.apt:
+      deb: "http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/{{libssl_version}}-1ubuntu2_amd64.deb"
+
+  - name: install  package
+    ansible.builtin.apt:
+      update_cache: yes
+      name: '{{ item }}' 
+    with_items:
+      - apt-transport-https
+      - ca-certificates
+      - build-essential
+      - gnupg
+      - curl
+      - git      

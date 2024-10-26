@@ -1,0 +1,3 @@
+---
+  mongodb_version: "5.0"
+  libssl_version: "libssl1.1_1.1.1f"
