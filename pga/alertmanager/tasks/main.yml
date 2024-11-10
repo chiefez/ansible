@@ -1,0 +1,62 @@
+---
+  - name: Create directory for alertmanager
+    ansible.builtin.file:
+      path: " {{workDir}} "
+      state: directory
+
+  - name: Download Alertmanager
+    ansible.builtin.get_url:
+      url: https://github.com/prometheus/alertmanager/releases/download/v0.25.0/alertmanager-0.25.0.linux-amd64.tar.gz
+      dest: "{{ workDir }}alertmanager-0.25.0.linux-amd64.tar.gz"
+
+  - name: Unpacking alertmanager
+    ansible.builtin.unarchive:
+      src: "{{ workDir }}alertmanager-0.25.0.linux-amd64.tar.gz"
+      dest: "{{ workDir }}"
+      remote_src: yes
+
+  - name: Create user for alertmanager
+    ansible.builtin.user:
+      name: alertmanager
+      create_home: no
+      shell: /bin/false
+
+  - name: Create directory for alertmanager
+    ansible.builtin.file:
+      path:
+        - /etc/alertmanager/
+        - /var/lib/prometheus/alertmanager/
+      state: directory
+      recurse: yes
+      owner: alertmanager
+
+  - name: Copy file alertmanager
+    ansible.builtin.copy:
+      src: "{{ workDir }}alertmanager-0.25.0.linux-amd64/alertmanager"
+      owner: alertmanager
+      dest: /usr/local/bin/alertmanager
+      remote_src: yes
+
+  - name: Copy file amtool
+    ansible.builtin.copy:
+       src: "{{ workDir }}alertmanager-0.25.0.linux-amd64/amtool"
+       owner: alertmanager
+       dest: /usr/local/bin/amtool
+       remote_src: yes
+
+  - name: Copy file alertmanager.yml
+    ansible.builtin.copy:
+      src: "{{ workDir}}alertmanager-0.25.0.linux-amd64/alertmanager.yml"
+      dest: /etc/alertmanager/
+      remote_src: yes
+
+  - name: Create daemon alertmanager
+    ansible.builtin.template:
+      src: "./pga/alertmanager/templates/alertmanager.service.j2"
+      dest: "/etc/systemd/system/alertmanager.service"
+                   
+  - name: Delete package alertmanager
+    ansible.builtin.file:
+      state: absent
+      path: "{{ workDir }}"
+

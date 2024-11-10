@@ -1,0 +1,8 @@
+---
+# handlers file for nodexporter
+#
+  - name: enable and restart
+    ansible.builtin.systemd:
+      name: node_exporer
+      enabled: true
+      state: restarted

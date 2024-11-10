@@ -1,0 +1,30 @@
+---
+  - name: install nginx
+    ansible.builtin.apt:
+      update_cache: true
+      name: nginx
+      state: latest
+        
+  - name: user for nginx
+    ansible.builtin.user:
+      name: nginx
+      create_home: no
+      shell: /bin/false
+
+  - name: directory for domain.test
+    ansible.builtin.file:
+      path: /var/www/domain.test/
+      state: directory
+      owner: nginx
+      recurse: yes
+
+  - name: copy temp
+    ansible.builtin.template:
+      src: "./nginx/templates/domain.test.j2"
+      dest: "{{ workDir }}sites-avaliable/domain.test"
+
+  - name: Configuration activate
+    ansible.builtin.file:
+      src: "{{ workDir }}sites-available/domain.test"
+      dest: "{{ workDir }}sites-enabled/domain.test"
+      state: link

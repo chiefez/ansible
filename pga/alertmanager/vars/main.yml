@@ -1,0 +1,5 @@
+---
+# vars file for alertmanager
+#
+  templateDir: "./alertmanager/templates/alertmanager.service.j2"
+  workDir: "/home/share/alertmanager/"

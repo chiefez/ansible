@@ -1,0 +1,25 @@
+---
+  - name: Enable Ufw
+    community.general.ufw:
+      state: enabled
+
+  - name: Allow exporter
+    community.general.ufw:
+      rule: allow
+      port: '9100'
+
+  - name: Allow grafana
+    community.general.ufw:
+      rule: allow
+      port: '3000'
+
+  - name: Allow prometheus
+    community.general.ufw:
+      rule: allow
+      port: '9090'
+
+  - name: Allow alertmanager
+    community.general.ufw:
+      rule: allow
+      port: '9093'
+

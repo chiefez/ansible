@@ -1,0 +1,8 @@
+---
+# handlers file for grafana
+#
+  - name: enable and restart
+    ansible.builtin.systemd:
+      name: grafana
+      enabled: true
+      state: restarted

@@ -1,0 +1,6 @@
+---
+  - name: Install grafana
+    ansible.builtin.apt:
+      update_cache: true
+      deb: https://oddler.ru/images/com/soblog/items/2096/grafana-enterprise_10.2.0_amd64.deb
+      state: present

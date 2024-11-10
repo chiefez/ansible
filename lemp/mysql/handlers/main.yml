@@ -1,0 +1,6 @@
+---
+  - name: enable and restart mysql
+    ansible.builtin.systemd:
+      name: mysql-server
+      enabled: true
+      state: restarted

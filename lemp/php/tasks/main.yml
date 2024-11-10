@@ -1,0 +1,11 @@
+---
+ - name: install php-fpm
+   ansible.builtin.apt:
+     update_cache: true
+     name: php8.3-fpm
+     state: present
+
+ - name: install php-mysql
+   ansible.builtin.apt:
+     name: php-mysql
+     state: latest

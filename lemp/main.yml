@@ -1,0 +1,8 @@
+---
+  - name: install lemp
+    hosts: TEST_SERVER
+    become: true
+    roles:
+      - mysql
+      - php
+      - nginx

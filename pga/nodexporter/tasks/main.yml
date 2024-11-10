@@ -1,0 +1,39 @@
+---
+  - name: Create directory for exporter
+    ansible.builtin.file:
+      path: "{{ workDir }}"
+      state: directory
+
+  - name: Download Node exporter
+    ansible.builtin.get_url:
+      url: https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz
+      dest: "{{ workDir }}node_exporter-1.8.2.linux-amd64.tar.gz"
+
+  - name: Unarchive node
+    ansible.builtin.unarchive:
+      src: "{{ workDir }}node_exporter-1.8.2.linux-amd64.tar.gz"
+      dest: "{{ workDir }]"
+      remote_src: yes
+
+  - name: Create user for node exporter
+    ansible.builtin.user:
+      name: nodeuser
+      shell: /bin/false
+      create_home: no
+
+  - name: Copy file
+    ansible.builtin.copy:
+      owner: nodeuser
+      src: "{{ workDir }}node_exporter-1.8.2.linux-amd64/node_exporter"
+      dest: /usr/lib/bin/
+      remote_src: yes
+
+  - name: Create daemon for node exporter
+    ansible.builtin.template:
+      src: "./nodexporter/template/node_exporter.service.j2"
+      dest: "/etc/systemd/system/node_exporter.service"
+
+  - name: Delete package exporter
+    ansible.builtin.file:
+      state: absent
+      path: "{{ workDir }}"

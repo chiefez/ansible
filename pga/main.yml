@@ -1,0 +1,10 @@
+---
+  - name: install monitoring
+    hosts: TEST_SERVER
+    become: true
+    roles: 
+      - prometheus
+      - grafana
+      - alertmanager
+      - nodexporter
+      - ufw
